@@ -100,7 +100,3 @@ ISR(PCINT0_vect)
 {
     playSongFlag=1;
 }
-
-ISR(TIM0_COMPB_vect)
-{
-}
