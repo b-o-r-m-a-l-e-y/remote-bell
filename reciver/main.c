@@ -47,6 +47,7 @@ int main()
         }
         if(playSongFlag && !rxSequencyFlag)
         {
+            DDRB=(1<<PIN0);
             //-------------- SONG ------------------
             for (uint8_t i=0; i<6; i++)
             {
@@ -101,44 +102,58 @@ void configuration()
     TCCR0B=(1<<CS02)|(1<<CS00);
     TCNT0=0;
     OCR0A=10; //For buzzer
+    DDRB &= ~(1<<PINB0);
     sei();
 }
 
 void checkSequency()
 {
+    cli();
     uint8_t bitCounter = 0;
     for (uint8_t i=0; i<16; i++)
     {
-        if (PORTB & (1<<PORTB3)) bitCounter++;
+        if (PINB & (1<<PORTB3)) bitCounter++;
         _delay_ms(1);
     }
-    if (bitCounter<14) return;
+    if (bitCounter<14) 
+    {
+        sei();
+        return;
+    }
     bitCounter = 0;
     for (uint8_t i=0; i<16; i++)
     {
-        if (~PORTB & (1<<PORTB3)) bitCounter++;
+        if (~PINB & (1<<PORTB3)) bitCounter++;
         _delay_ms(1);
     }
-    if (bitCounter<14) return;
+    if (bitCounter>=14)
+    {
+        playSongFlag=1;
+        rxSequencyFlag=0;
+        sei();
+        return;
+    } return;
     bitCounter = 0;
     for (uint8_t k=0; k<3; k++)
     {
         for (uint8_t i=0; i<8; i++)
         {
-            if (PORTB & (1<<PORTB3)) bitCounter++;
+            if (PINB & (1<<PORTB3)) bitCounter++;
             _delay_ms(1);
         }
         if (bitCounter<7) return;
         bitCounter = 0;
         for (uint8_t i=0; i<8; i++)
         {
-            if (~PORTB & (1<<PORTB3)) bitCounter++;
+            if (~PINB & (1<<PORTB3)) bitCounter++;
             _delay_ms(1);
         }
         if (bitCounter<7) return;
     }
     rxSequencyFlag=0;
     playSongFlag=1;
+    sei();
+    return;
 }
 
 ISR(PCINT0_vect)
