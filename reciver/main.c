@@ -126,29 +126,67 @@ void checkSequency()
         if (~PINB & (1<<PORTB3)) bitCounter++;
         _delay_ms(1);
     }
-    if (bitCounter>=14)
+    if (bitCounter<14)
     {
-        playSongFlag=1;
-        rxSequencyFlag=0;
         sei();
         return;
-    } return;
-    bitCounter = 0;
+    }
+    /*
     for (uint8_t k=0; k<3; k++)
     {
-        for (uint8_t i=0; i<8; i++)
+        bitCounter = 0;
+        for (uint8_t i=0; i<6; i++)
         {
             if (PINB & (1<<PORTB3)) bitCounter++;
             _delay_ms(1);
         }
-        if (bitCounter<7) return;
+        if (bitCounter<3)
+        {
+            sei();
+            return;
+        }
         bitCounter = 0;
-        for (uint8_t i=0; i<8; i++)
+        for (uint8_t i=0; i<7; i++)
         {
             if (~PINB & (1<<PORTB3)) bitCounter++;
             _delay_ms(1);
         }
-        if (bitCounter<7) return;
+        if (bitCounter<3)
+        {
+            sei();
+            return;
+        }
+    }
+    */
+    rxSequencyFlag=0;
+    playSongFlag=1;
+    sei();
+    return;
+    bitCounter = 0;
+    for (uint8_t i=0; i<7; i++)
+    {
+        if (PINB & (1<<PORTB3)) bitCounter++;
+        _delay_ms(1);
+    }
+    if (bitCounter<4)
+    {
+        sei();
+        return;
+    }
+    rxSequencyFlag=0;
+    playSongFlag=1;
+    sei();
+    return;
+    bitCounter = 0;
+    for (uint8_t i=0; i<7; i++)
+    {
+        if (~PINB & (1<<PORTB3)) bitCounter++;
+        _delay_ms(1);
+    }
+    if (bitCounter<2)
+    {
+        sei();
+        return;
     }
     rxSequencyFlag=0;
     playSongFlag=1;
