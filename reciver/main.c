@@ -7,9 +7,12 @@
 #include <util/delay.h>
 
 uint8_t playSongFlag = 0;
+uint8_t rxSequencyFlag = 0;
 uint16_t msCounter = 0;
 uint16_t prevMsCounter = 0;
 uint8_t toneCounter = 0;
+
+uint16_t buffer = 0;
 
 typedef struct
 {
@@ -20,6 +23,7 @@ typedef struct
 #define PAUSE(t) DDRB&=~(1<<PINB0); _delay_ms(t); DDRB|=(1<<PINB0);
 
 void configuration();
+void checkSequency();
 
 int main()
 {
@@ -27,17 +31,21 @@ int main()
     playSongFlag = 0;
     while(1)
     {
-        if(!playSongFlag)
+        if (rxSequencyFlag)
+        {
+            checkSequency();
+        }
+        rxSequencyFlag = 0;
+        //sleep
+        if(!playSongFlag && !rxSequencyFlag)
         {
             DDRB &= ~(1<<PINB0);
-            /*
             cli();
             sleep_enable();
             sei();
             sleep_cpu();
-            */
         }
-        else
+        if(playSongFlag && !rxSequencyFlag)
         {
             //-------------- SONG ------------------
             for (uint8_t i=0; i<6; i++)
@@ -96,7 +104,45 @@ void configuration()
     sei();
 }
 
+void checkSequency()
+{
+    uint8_t bitCounter = 0;
+    for (uint8_t i=0; i<16; i++)
+    {
+        if (PORTB & (1<<PORTB3)) bitCounter++;
+        _delay_ms(1);
+    }
+    if (bitCounter<14) return;
+    bitCounter = 0;
+    for (uint8_t i=0; i<16; i++)
+    {
+        if (~PORTB & (1<<PORTB3)) bitCounter++;
+        _delay_ms(1);
+    }
+    if (bitCounter<14) return;
+    bitCounter = 0;
+    for (uint8_t k=0; k<3; k++)
+    {
+        for (uint8_t i=0; i<8; i++)
+        {
+            if (PORTB & (1<<PORTB3)) bitCounter++;
+            _delay_ms(1);
+        }
+        if (bitCounter<7) return;
+        bitCounter = 0;
+        for (uint8_t i=0; i<8; i++)
+        {
+            if (~PORTB & (1<<PORTB3)) bitCounter++;
+            _delay_ms(1);
+        }
+        if (bitCounter<7) return;
+    }
+    rxSequencyFlag=0;
+    playSongFlag=1;
+}
+
 ISR(PCINT0_vect)
 {
-    playSongFlag=1;
+    rxSequencyFlag=1;
+    sleep_disable();
 }
